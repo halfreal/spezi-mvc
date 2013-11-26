@@ -10,7 +10,7 @@
 		<version>7</version>
 	</parent>
 
-	<groupId>de.halfreal.spezi.mvc</groupId>
+	<groupId>de.halfreal</groupId>
 	<artifactId>spezi-mvc-parent</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>

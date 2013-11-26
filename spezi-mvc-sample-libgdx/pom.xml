@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>de.halfreal.spezi.mvc</groupId>
+		<groupId>de.halfreal</groupId>
 		<artifactId>spezi-mvc-parent</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>

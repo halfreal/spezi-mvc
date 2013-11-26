@@ -14,7 +14,7 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>de.halfreal.spezi.mvc</groupId>
+			<groupId>de.halfreal</groupId>
 			<artifactId>spezi-mvc</artifactId>
 			<version>${parent.version}</version>
 		</dependency>

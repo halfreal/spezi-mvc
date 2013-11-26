@@ -10,7 +10,7 @@
 		<version>7</version>
 	</parent>
 
-	<groupId>de.halfreal</groupId>
+	<groupId>de.halfreal.spezi.mvc</groupId>
 	<artifactId>spezi-mvc-parent</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
@@ -23,6 +23,7 @@
 	<modules>
 		<module>spezi-mvc</module>
 		<module>spezi-mvc-sample-android</module>
+		<module>spezi-mvc-sample-java</module>
 		<module>spezi-mvc-sample-libgdx</module>
 	</modules>
 
@@ -54,6 +55,11 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+				<version>${junit.version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 

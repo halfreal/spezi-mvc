@@ -9,10 +9,20 @@
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>spezi-mvc-sample-android</artifactId>
-	<name>Spezi MVC :: Sample Android</name>
+	<artifactId>spezi-mvc-sample-java</artifactId>
+	<name>Spezi MVC :: Sample Java</name>
 
 	<dependencies>
+		<dependency>
+			<groupId>de.halfreal.spezi.mvc</groupId>
+			<artifactId>spezi-mvc</artifactId>
+			<version>${parent.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 </project>

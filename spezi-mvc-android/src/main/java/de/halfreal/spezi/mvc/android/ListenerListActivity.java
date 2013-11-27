@@ -1,6 +1,6 @@
 package de.halfreal.spezi.mvc.android;
 
-import android.app.Activity;
+import android.app.ListActivity;
 import android.os.Bundle;
 import de.halfreal.spezi.mvc.AbstractController;
 import de.halfreal.spezi.mvc.AbstractModel;
@@ -8,15 +8,15 @@ import de.halfreal.spezi.mvc.ChangeListener;
 import de.halfreal.spezi.mvc.Key;
 import de.halfreal.spezi.mvc.ListenerRegistry;
 
-public abstract class ListenerActivity<C extends AbstractController<M>, M extends AbstractModel>
-		extends Activity {
+public abstract class ListenerListActivity<C extends AbstractController<M>, M extends AbstractModel>
+		extends ListActivity {
 
 	protected C controller;
 	private boolean createdModelListeners;
 	private ListenerRegistry<M> listenerRegistry;
 	protected M model;
 
-	public ListenerActivity(C controller) {
+	public ListenerListActivity(C controller) {
 		this.controller = controller;
 		this.model = controller.getModel();
 	}

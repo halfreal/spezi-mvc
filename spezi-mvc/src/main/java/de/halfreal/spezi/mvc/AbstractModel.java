@@ -39,7 +39,7 @@ public abstract class AbstractModel {
 		}
 	}
 
-	protected <T> void fireUpdate(Key<T> key) {
+	public <T> void fireUpdate(Key<T> key) {
 		T value = get(key);
 		fireChange(key, value, value);
 	}

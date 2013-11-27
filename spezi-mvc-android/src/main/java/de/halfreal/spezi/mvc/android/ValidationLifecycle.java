@@ -1,6 +1,6 @@
 package de.halfreal.spezi.mvc.android;
 
-public interface ValidateLifecycle {
+public interface ValidationLifecycle {
 
 	void initialNetworkCall();
 

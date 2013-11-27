@@ -22,9 +22,6 @@
 
 	<modules>
 		<module>spezi-mvc</module>
-		<module>spezi-mvc-sample-android</module>
-		<module>spezi-mvc-sample-java</module>
-		<module>spezi-mvc-sample-libgdx</module>
 		<module>spezi-mvc-android</module>
 	</modules>
 
@@ -33,11 +30,11 @@
 
 		<java.version>1.6</java.version>
 		<junit.version>4.11</junit.version>
-		
+
 		<android-maven-plugin.version>3.7.0</android-maven-plugin.version>
 		<maven-compiler-plugin.version>3.0.0</maven-compiler-plugin.version>
 		<maven-install-plugin.version>2.4</maven-install-plugin.version>
-		
+
 		<android.version>4.1.1.4</android.version>
 		<support-v4.version>18.0.0</support-v4.version>
 	</properties>
@@ -103,18 +100,29 @@
 				</configuration>
 			</plugin>
 			<plugin>
-			<groupId>org.apache.maven.plugins</groupId>
-			<artifactId>maven-source-plugin</artifactId>
-			<executions>
-				<execution>
-					<id>attach-sources</id>
-					<goals>
-						<goal>jar</goal>
-					</goals>
-				</execution>
-			</executions>
-		</plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>samples</id>
+			<modules>
+				<module>spezi-mvc-sample-android</module>
+				<module>spezi-mvc-sample-java</module>
+				<module>spezi-mvc-sample-libgdx</module>
+			</modules>
+		</profile>
+	</profiles>
 
 </project>

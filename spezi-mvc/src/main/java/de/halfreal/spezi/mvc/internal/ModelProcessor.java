@@ -20,7 +20,10 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.WildcardType;
+import javax.lang.model.util.Types;
 import javax.tools.JavaFileObject;
 
 import de.halfreal.spezi.mvc.Model;
@@ -32,14 +35,26 @@ public class ModelProcessor extends AbstractProcessor {
 	private static final String MODEL_BASE_CLASS = "de.halfreal.spezi.mvc.AbstractModel";
 
 	private Filer filer;
+	private Types typeUtils;
 
-	private void addTypes(Set<String> imports, DeclaredType declaredType) {
+	private void addTypes(Set<String> imports, TypeMirror type) {
 
-		Element declaredElement = declaredType.asElement();
-		imports.add(declaredElement.toString());
+		if (type instanceof DeclaredType) {
+			DeclaredType declaredType = (DeclaredType) type;
+			Element declaredElement = declaredType.asElement();
+			imports.add(declaredElement.toString());
 
-		for (TypeMirror typeArgument : declaredType.getTypeArguments()) {
-			addTypes(imports, (DeclaredType) typeArgument);
+			for (TypeMirror typeArgument : declaredType.getTypeArguments()) {
+				addTypes(imports, typeArgument);
+			}
+		} else if (type instanceof WildcardType) {
+			WildcardType wildcardType = (WildcardType) type;
+			if (wildcardType.getExtendsBound() != null) {
+				addTypes(imports, wildcardType.getExtendsBound());
+			}
+			if (wildcardType.getSuperBound() != null) {
+				addTypes(imports, wildcardType.getSuperBound());
+			}
 		}
 	}
 
@@ -60,8 +75,6 @@ public class ModelProcessor extends AbstractProcessor {
 		for (Element enclosedElement : typeElement.getEnclosedElements()) {
 			if (enclosedElement instanceof VariableElement) {
 				VariableElement variableElement = (VariableElement) enclosedElement;
-				DeclaredType declaredType = (DeclaredType) variableElement
-						.asType();
 
 				if (isConstant(variableElement)) {
 					continue;
@@ -73,7 +86,8 @@ public class ModelProcessor extends AbstractProcessor {
 							typeElement, variableElement);
 				}
 
-				appendVariable(builder, enclosedElement, declaredType);
+				appendVariable(builder, enclosedElement,
+						variableElement.asType());
 			}
 		}
 	}
@@ -90,9 +104,7 @@ public class ModelProcessor extends AbstractProcessor {
 		for (Element enclosedElement : typeElement.getEnclosedElements()) {
 			if (enclosedElement instanceof VariableElement) {
 				VariableElement variableElement = (VariableElement) enclosedElement;
-				DeclaredType declaredType = (DeclaredType) variableElement
-						.asType();
-				addTypes(imports, declaredType);
+				addTypes(imports, variableElement.asType());
 			}
 		}
 
@@ -111,14 +123,12 @@ public class ModelProcessor extends AbstractProcessor {
 			if (enclosedElement instanceof VariableElement) {
 				VariableElement variableElement = (VariableElement) enclosedElement;
 				builder.append("\t\tpublic static final Key<")
-						.append(getTypeString((DeclaredType) variableElement
-								.asType()))
+						.append(getTypeString(variableElement.asType(), true))
 						.append("> ")
 						.append(getConstantName(enclosedElement.getSimpleName()))
 						.append(" = new Key<")
-						.append(getTypeString((DeclaredType) variableElement
-								.asType())).append(">(\"")
-						.append(variableElement.getSimpleName())
+						.append(getTypeString(variableElement.asType(), true))
+						.append(">(\"").append(variableElement.getSimpleName())
 						.append("\");\n");
 			}
 		}
@@ -134,8 +144,8 @@ public class ModelProcessor extends AbstractProcessor {
 	}
 
 	private void appendVariable(StringBuilder builder, Element enclosedElement,
-			DeclaredType declaredType) {
-		builder.append("\tpublic ").append(getTypeString(declaredType))
+			TypeMirror declaredType) {
+		builder.append("\tpublic ").append(getTypeString(declaredType, false))
 				.append(" ")
 				.append(getGetterName(enclosedElement.getSimpleName()))
 				.append("() {\n");
@@ -145,9 +155,10 @@ public class ModelProcessor extends AbstractProcessor {
 
 		builder.append("\tpublic void ")
 				.append(getSetterName(enclosedElement.getSimpleName()))
-				.append("(").append(getTypeString(declaredType)).append(" ")
-				.append(enclosedElement.getSimpleName()).append(") {\n");
-		builder.append("\t\t").append(getTypeString(declaredType))
+				.append("(").append(getTypeString(declaredType, false))
+				.append(" ").append(enclosedElement.getSimpleName())
+				.append(") {\n");
+		builder.append("\t\t").append(getTypeString(declaredType, false))
 				.append(" oldValue = this.")
 				.append(enclosedElement.getSimpleName()).append(";\n");
 		builder.append("\t\tthis.").append(enclosedElement.getSimpleName())
@@ -230,31 +241,66 @@ public class ModelProcessor extends AbstractProcessor {
 		return names[names.length - 1];
 	}
 
-	private String getTypeString(DeclaredType declaredType) {
+	private String getTypeString(TypeMirror type, boolean convertPrimitives) {
 
 		StringBuilder typeBuilder = new StringBuilder();
-		Element declaredElement = declaredType.asElement();
+		if (type instanceof DeclaredType) {
+			DeclaredType declaredType = (DeclaredType) type;
+			Element declaredElement = declaredType.asElement();
 
-		typeBuilder.append(getTypeName(declaredElement));
+			typeBuilder.append(getTypeName(declaredElement));
 
-		List<? extends TypeMirror> typeArguments = declaredType
-				.getTypeArguments();
+			List<? extends TypeMirror> typeArguments = declaredType
+					.getTypeArguments();
 
-		if (typeArguments.size() > 0) {
-			typeBuilder.append("<");
-			boolean first = true;
-			for (TypeMirror typeArgument : typeArguments) {
-				if (first) {
-					first = false;
-				} else {
-					typeBuilder.append(",");
+			if (typeArguments.size() > 0) {
+				typeBuilder.append("<");
+				boolean first = true;
+				for (TypeMirror typeArgument : typeArguments) {
+					if (first) {
+						first = false;
+					} else {
+						typeBuilder.append(",");
+					}
+					typeBuilder.append(getTypeString(typeArgument,
+							convertPrimitives));
 				}
-				typeBuilder.append(getTypeString((DeclaredType) typeArgument));
+				typeBuilder.append(">");
 			}
-			typeBuilder.append(">");
-		}
 
-		return typeBuilder.toString();
+			return typeBuilder.toString();
+		} else if (type instanceof WildcardType) {
+
+			WildcardType wildcardType = (WildcardType) type;
+			if (wildcardType.getExtendsBound() == null
+					&& wildcardType.getSuperBound() == null) {
+				// ?
+				return "?";
+			} else if (wildcardType.getExtendsBound() != null) {
+				// ? extends Number
+				return String.format(
+						"? extends %s",
+						getTypeString(wildcardType.getExtendsBound(),
+								convertPrimitives));
+			} else {
+				// ? super T
+				return String.format(
+						"? super %s",
+						getTypeString(wildcardType.getSuperBound(),
+								convertPrimitives));
+			}
+		} else if (type instanceof PrimitiveType) {
+			PrimitiveType primitiveType = (PrimitiveType) type;
+			if (convertPrimitives) {
+				TypeElement boxedClass = typeUtils.boxedClass(primitiveType);
+				return getTypeString(boxedClass.asType(), convertPrimitives);
+			} else {
+				return primitiveType.toString();
+			}
+		} else {
+			// TODO provide an error
+			return "";
+		}
 	}
 
 	private String getUppercaseName(Name simpleName) {
@@ -277,6 +323,7 @@ public class ModelProcessor extends AbstractProcessor {
 		super.init(env);
 
 		filer = env.getFiler();
+		typeUtils = env.getTypeUtils();
 	}
 
 	private boolean isConstant(VariableElement variableElement) {

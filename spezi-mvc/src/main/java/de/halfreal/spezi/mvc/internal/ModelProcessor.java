@@ -188,14 +188,19 @@ public class ModelProcessor extends AbstractProcessor {
 	private void createModelClass(TypeElement typeElement) {
 		TypeMirror type = typeElement.asType();
 
-		PackageElement packageElement = (PackageElement) typeElement
-				.getEnclosingElement();
+		Element element = typeElement.getEnclosingElement();
+		if (element instanceof PackageElement) {
+			PackageElement packageElement = (PackageElement) element;
+			String fileName = getPackageName(packageElement) + "."
+					+ getClassName(typeElement);
+			String modelBody = createModelBody(typeElement, type);
 
-		String fileName = getPackageName(packageElement) + "."
-				+ getClassName(typeElement);
-		String modelBody = createModelBody(typeElement, type);
-
-		writeModelClass(fileName, modelBody, typeElement);
+			writeModelClass(fileName, modelBody, typeElement);
+		} else {
+			// TODO add support for inner classes
+			error(element, "Cannot generate Model for inner Classes. %s",
+					element.toString());
+		}
 	}
 
 	private void error(Element element, String message, Object... args) {

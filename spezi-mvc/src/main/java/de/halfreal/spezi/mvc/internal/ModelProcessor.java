@@ -122,6 +122,11 @@ public class ModelProcessor extends AbstractProcessor {
 		for (Element enclosedElement : typeElement.getEnclosedElements()) {
 			if (enclosedElement instanceof VariableElement) {
 				VariableElement variableElement = (VariableElement) enclosedElement;
+
+				if (isConstant(variableElement)) {
+					continue;
+				}
+
 				builder.append("\t\tpublic static final Key<")
 						.append(getTypeString(variableElement.asType(), true))
 						.append("> ")

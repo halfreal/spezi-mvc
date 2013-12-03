@@ -19,6 +19,7 @@ import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeMirror;
@@ -55,6 +56,9 @@ public class ModelProcessor extends AbstractProcessor {
 			if (wildcardType.getSuperBound() != null) {
 				addTypes(imports, wildcardType.getSuperBound());
 			}
+		} else if (type instanceof ArrayType) {
+			ArrayType arrayType = (ArrayType) type;
+			addTypes(imports, arrayType.getComponentType());
 		}
 	}
 
@@ -174,6 +178,25 @@ public class ModelProcessor extends AbstractProcessor {
 				.append(", oldValue, ").append(enclosedElement.getSimpleName())
 				.append(");\n");
 		builder.append("\t}\n\n");
+	}
+
+	private String createArrayTypeString(TypeMirror type, int dimension,
+			boolean convertPrimitives) {
+		if (type instanceof ArrayType) {
+			TypeMirror componentType = ((ArrayType) type).getComponentType();
+			return createArrayTypeString(componentType, dimension + 1,
+					convertPrimitives);
+		} else {
+
+			StringBuilder sb = new StringBuilder();
+			sb.append(getTypeString(type, convertPrimitives));
+			for (int i = 0; i < dimension; i++) {
+				sb.append("[]");
+			}
+			return sb.toString();
+
+		}
+
 	}
 
 	private String createModelBody(TypeElement typeElement, TypeMirror type) {
@@ -307,6 +330,9 @@ public class ModelProcessor extends AbstractProcessor {
 			} else {
 				return primitiveType.toString();
 			}
+		} else if (type instanceof ArrayType) {
+			return createArrayTypeString(type, 0, convertPrimitives);
+
 		} else {
 			// TODO provide an error
 			return "";

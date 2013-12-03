@@ -9,6 +9,26 @@ import java.util.Map;
 @SuppressWarnings("rawtypes")
 public abstract class AbstractModel {
 
+	public static Field findField(String name, Class<?> type)
+			throws NoSuchFieldException {
+		Field declaredField = null;
+		try {
+			declaredField = type.getDeclaredField(name);
+		} catch (SecurityException e) {
+		} catch (NoSuchFieldException e) {
+			if (type.getSuperclass() == null) {
+				throw e;
+			}
+		}
+		if (declaredField != null) {
+			return declaredField;
+		} else if (type.getSuperclass() != null) {
+			return findField(name, type.getSuperclass());
+		} else {
+			return null;
+		}
+	}
+
 	private Map<Key, List<ChangeListener>> listeners;
 
 	protected AbstractModel() {
@@ -18,6 +38,10 @@ public abstract class AbstractModel {
 	public <T> void addChangeListener(Key<T> key, ChangeListener<T> listener) {
 		List<ChangeListener> keyListeners = findOrCreateKeyListeners(key);
 		keyListeners.add(listener);
+	}
+
+	public <T> Field findField(Key<T> key) throws NoSuchFieldException {
+		return findField(key.getName(), getClass());
 	}
 
 	private synchronized List<ChangeListener> findOrCreateKeyListeners(Key key) {
@@ -47,7 +71,7 @@ public abstract class AbstractModel {
 	@SuppressWarnings("unchecked")
 	public <T> T get(Key<T> key) {
 		try {
-			Field field = getClass().getDeclaredField(key.getName());
+			Field field = findField(key);
 			if (!field.isAccessible()) {
 				field.setAccessible(true);
 			}
@@ -74,7 +98,7 @@ public abstract class AbstractModel {
 
 	public <T> void set(Key<T> key, T value) {
 		try {
-			Field field = getClass().getDeclaredField(key.getName());
+			Field field = findField(key);
 			if (!field.isAccessible()) {
 				field.setAccessible(true);
 			}

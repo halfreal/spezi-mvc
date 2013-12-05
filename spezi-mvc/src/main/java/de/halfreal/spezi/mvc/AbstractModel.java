@@ -102,7 +102,10 @@ public abstract class AbstractModel {
 			if (!field.isAccessible()) {
 				field.setAccessible(true);
 			}
+			@SuppressWarnings("unchecked")
+			T oldValue = (T) field.get(this);
 			field.set(this, value);
+			fireChange(key, oldValue, value);
 		} catch (NoSuchFieldException e) {
 			e.printStackTrace();
 		} catch (SecurityException e) {

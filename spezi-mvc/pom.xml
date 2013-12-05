@@ -29,7 +29,7 @@
 					<compilerArgument>-proc:none</compilerArgument>
 				</configuration>
 			</plugin>
-		</plugins>
+		</plugins>	
 	</build>
 
 </project>

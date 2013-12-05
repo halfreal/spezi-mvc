@@ -18,11 +18,13 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.Types;
 import javax.tools.JavaFileObject;
@@ -70,8 +72,14 @@ public class ModelProcessor extends AbstractProcessor {
 			TypeElement typeElement) {
 		String className = getClassName(typeElement);
 
-		builder.append("public class ").append(className).append(" extends ")
-				.append(typeElement.getSimpleName()).append(" {\n\n");
+		String parameterAppend = getClassTypeParameter(typeElement, true);
+		String parameterAppendWithoutBounds = getClassTypeParameter(
+				typeElement, false);
+
+		builder.append("public class ").append(className)
+				.append(parameterAppend).append(" extends ")
+				.append(typeElement.getSimpleName())
+				.append(parameterAppendWithoutBounds).append(" {\n\n");
 	}
 
 	private void appendGettersAndSetters(StringBuilder builder,
@@ -112,6 +120,12 @@ public class ModelProcessor extends AbstractProcessor {
 			}
 		}
 
+		for (TypeParameterElement parameters : typeElement.getTypeParameters()) {
+			for (TypeMirror bound : parameters.getBounds()) {
+				addTypes(imports, bound);
+			}
+		}
+
 		for (String importClass : imports) {
 			builder.append("import ").append(importClass).append(";\n");
 		}
@@ -131,14 +145,25 @@ public class ModelProcessor extends AbstractProcessor {
 					continue;
 				}
 
-				builder.append("\t\tpublic static final Key<")
-						.append(getTypeString(variableElement.asType(), true))
-						.append("> ")
-						.append(getConstantName(enclosedElement.getSimpleName()))
-						.append(" = new Key<")
-						.append(getTypeString(variableElement.asType(), true))
-						.append(">(\"").append(variableElement.getSimpleName())
-						.append("\");\n");
+				TypeMirror type = variableElement.asType();
+				if (type instanceof TypeVariable) {
+					builder.append("\t\tpublic static final Key<Object>")
+							.append(" ")
+							.append(getConstantName(enclosedElement
+									.getSimpleName()))
+							.append(" = new Key<Object>").append("(\"")
+							.append(variableElement.getSimpleName())
+							.append("\");\n");
+				} else {
+					builder.append("\t\tpublic static final Key<")
+							.append(getTypeString(type, true))
+							.append("> ")
+							.append(getConstantName(enclosedElement
+									.getSimpleName())).append(" = new Key<")
+							.append(getTypeString(type, true)).append(">(\"")
+							.append(variableElement.getSimpleName())
+							.append("\");\n");
+				}
 			}
 		}
 
@@ -209,8 +234,8 @@ public class ModelProcessor extends AbstractProcessor {
 		appendKeysClass(builder, typeElement);
 		appendGettersAndSetters(builder, typeElement);
 		appendClassFooter(builder);
-
 		return builder.toString();
+
 	}
 
 	private void createModelClass(TypeElement typeElement) {
@@ -221,9 +246,12 @@ public class ModelProcessor extends AbstractProcessor {
 			PackageElement packageElement = (PackageElement) element;
 			String fileName = getPackageName(packageElement) + "."
 					+ getClassName(typeElement);
-			String modelBody = createModelBody(typeElement, type);
-
-			writeModelClass(fileName, modelBody, typeElement);
+			try {
+				String modelBody = createModelBody(typeElement, type);
+				writeModelClass(fileName, modelBody, typeElement);
+			} catch (RuntimeException re) {
+				error(element, re.getMessage());
+			}
 		} else {
 			// TODO add support for inner classes
 			error(element, "Cannot generate Model for inner Classes. %s",
@@ -248,6 +276,30 @@ public class ModelProcessor extends AbstractProcessor {
 		} else {
 			return typeElement.getSimpleName() + "Model";
 		}
+	}
+
+	public String getClassTypeParameter(TypeElement typeElement,
+			boolean withBounds) {
+		String parameterAppend = "";
+		List<? extends TypeParameterElement> typeParameters = typeElement
+				.getTypeParameters();
+		if (typeParameters != null && !typeParameters.isEmpty()) {
+			StringBuilder sb = new StringBuilder();
+			sb.append("<");
+			for (TypeParameterElement param : typeParameters) {
+				sb.append(param.getSimpleName());
+				if (withBounds && param.getBounds() != null
+						&& !param.getBounds().isEmpty()) {
+					sb.append(" extends ").append(
+							getTypeString(param.getBounds().get(0), false));
+				}
+				sb.append(",");
+			}
+			sb.deleteCharAt(sb.length() - 1);
+			sb.append(">");
+			parameterAppend = sb.toString();
+		}
+		return parameterAppend;
 	}
 
 	private String getConstantName(Name simpleName) {
@@ -325,17 +377,24 @@ public class ModelProcessor extends AbstractProcessor {
 		} else if (type instanceof PrimitiveType) {
 			PrimitiveType primitiveType = (PrimitiveType) type;
 			if (convertPrimitives) {
-				TypeElement boxedClass = typeUtils.boxedClass(primitiveType);
-				return getTypeString(boxedClass.asType(), convertPrimitives);
+				try {
+					TypeElement boxedClass = typeUtils
+							.boxedClass(primitiveType);
+					return getTypeString(boxedClass.asType(), convertPrimitives);
+				} catch (NullPointerException ex) {
+					return primitiveType.toString();
+				}
 			} else {
 				return primitiveType.toString();
 			}
 		} else if (type instanceof ArrayType) {
 			return createArrayTypeString(type, 0, convertPrimitives);
 
+		} else if (type instanceof TypeVariable) {
+			return type.toString();
 		} else {
-			// TODO provide an error
-			return "";
+			throw new RuntimeException("Cannot convert " + type
+					+ " to String representation!");
 		}
 	}
 

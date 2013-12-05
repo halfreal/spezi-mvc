@@ -351,8 +351,12 @@ public class ModelProcessor extends AbstractProcessor {
 					} else {
 						typeBuilder.append(",");
 					}
-					typeBuilder.append(getTypeString(typeArgument,
-							convertPrimitives, staticTyping));
+					if (staticTyping && hasTypeVariable(typeArgument)) {
+						typeBuilder.append("?");
+					} else {
+						typeBuilder.append(getTypeString(typeArgument,
+								convertPrimitives, staticTyping));
+					}
 				}
 				typeBuilder.append(">");
 			}
@@ -411,6 +415,24 @@ public class ModelProcessor extends AbstractProcessor {
 	private String getUppercaseName(Name simpleName) {
 		return simpleName.toString().substring(0, 1).toUpperCase()
 				+ simpleName.toString().substring(1);
+	}
+
+	private boolean hasTypeVariable(TypeMirror typeArgument) {
+		if (typeArgument instanceof TypeVariable) {
+			return true;
+		} else if (typeArgument instanceof DeclaredType) {
+			for (TypeMirror argument : ((DeclaredType) typeArgument)
+					.getTypeArguments()) {
+				if (hasTypeVariable(argument)) {
+					return true;
+				}
+			}
+		} else if (typeArgument instanceof ArrayType) {
+			if (hasTypeVariable(((ArrayType) typeArgument).getComponentType())) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private boolean hasValidModifiers(VariableElement variableElement) {

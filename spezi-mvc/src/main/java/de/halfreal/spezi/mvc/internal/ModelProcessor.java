@@ -156,11 +156,12 @@ public class ModelProcessor extends AbstractProcessor {
 							.append("\");\n");
 				} else {
 					builder.append("\t\tpublic static final Key<")
-							.append(getTypeString(type, true))
+							.append(getTypeString(type, true, true))
 							.append("> ")
 							.append(getConstantName(enclosedElement
 									.getSimpleName())).append(" = new Key<")
-							.append(getTypeString(type, true)).append(">(\"")
+							.append(getTypeString(type, true, true))
+							.append(">(\"")
 							.append(variableElement.getSimpleName())
 							.append("\");\n");
 				}
@@ -179,8 +180,8 @@ public class ModelProcessor extends AbstractProcessor {
 
 	private void appendVariable(StringBuilder builder, Element enclosedElement,
 			TypeMirror declaredType) {
-		builder.append("\tpublic ").append(getTypeString(declaredType, false))
-				.append(" ")
+		builder.append("\tpublic ")
+				.append(getTypeString(declaredType, false, false)).append(" ")
 				.append(getGetterName(enclosedElement.getSimpleName()))
 				.append("() {\n");
 		builder.append("\t\treturn ").append(enclosedElement.getSimpleName())
@@ -189,10 +190,11 @@ public class ModelProcessor extends AbstractProcessor {
 
 		builder.append("\tpublic void ")
 				.append(getSetterName(enclosedElement.getSimpleName()))
-				.append("(").append(getTypeString(declaredType, false))
+				.append("(").append(getTypeString(declaredType, false, false))
 				.append(" ").append(enclosedElement.getSimpleName())
 				.append(") {\n");
-		builder.append("\t\t").append(getTypeString(declaredType, false))
+		builder.append("\t\t")
+				.append(getTypeString(declaredType, false, false))
 				.append(" oldValue = this.")
 				.append(enclosedElement.getSimpleName()).append(";\n");
 		builder.append("\t\tthis.").append(enclosedElement.getSimpleName())
@@ -206,15 +208,15 @@ public class ModelProcessor extends AbstractProcessor {
 	}
 
 	private String createArrayTypeString(TypeMirror type, int dimension,
-			boolean convertPrimitives) {
+			boolean convertPrimitives, boolean staticTyping) {
 		if (type instanceof ArrayType) {
 			TypeMirror componentType = ((ArrayType) type).getComponentType();
 			return createArrayTypeString(componentType, dimension + 1,
-					convertPrimitives);
+					convertPrimitives, staticTyping);
 		} else {
 
 			StringBuilder sb = new StringBuilder();
-			sb.append(getTypeString(type, convertPrimitives));
+			sb.append(getTypeString(type, convertPrimitives, staticTyping));
 			for (int i = 0; i < dimension; i++) {
 				sb.append("[]");
 			}
@@ -291,7 +293,8 @@ public class ModelProcessor extends AbstractProcessor {
 				if (withBounds && param.getBounds() != null
 						&& !param.getBounds().isEmpty()) {
 					sb.append(" extends ").append(
-							getTypeString(param.getBounds().get(0), false));
+							getTypeString(param.getBounds().get(0), false,
+									false));
 				}
 				sb.append(",");
 			}
@@ -326,7 +329,8 @@ public class ModelProcessor extends AbstractProcessor {
 		return names[names.length - 1];
 	}
 
-	private String getTypeString(TypeMirror type, boolean convertPrimitives) {
+	private String getTypeString(TypeMirror type, boolean convertPrimitives,
+			boolean staticTyping) {
 
 		StringBuilder typeBuilder = new StringBuilder();
 		if (type instanceof DeclaredType) {
@@ -348,7 +352,7 @@ public class ModelProcessor extends AbstractProcessor {
 						typeBuilder.append(",");
 					}
 					typeBuilder.append(getTypeString(typeArgument,
-							convertPrimitives));
+							convertPrimitives, staticTyping));
 				}
 				typeBuilder.append(">");
 			}
@@ -366,13 +370,13 @@ public class ModelProcessor extends AbstractProcessor {
 				return String.format(
 						"? extends %s",
 						getTypeString(wildcardType.getExtendsBound(),
-								convertPrimitives));
+								convertPrimitives, staticTyping));
 			} else {
 				// ? super T
 				return String.format(
 						"? super %s",
 						getTypeString(wildcardType.getSuperBound(),
-								convertPrimitives));
+								convertPrimitives, staticTyping));
 			}
 		} else if (type instanceof PrimitiveType) {
 			PrimitiveType primitiveType = (PrimitiveType) type;
@@ -380,7 +384,8 @@ public class ModelProcessor extends AbstractProcessor {
 				try {
 					TypeElement boxedClass = typeUtils
 							.boxedClass(primitiveType);
-					return getTypeString(boxedClass.asType(), convertPrimitives);
+					return getTypeString(boxedClass.asType(),
+							convertPrimitives, staticTyping);
 				} catch (NullPointerException ex) {
 					return primitiveType.toString();
 				}
@@ -388,10 +393,15 @@ public class ModelProcessor extends AbstractProcessor {
 				return primitiveType.toString();
 			}
 		} else if (type instanceof ArrayType) {
-			return createArrayTypeString(type, 0, convertPrimitives);
+			return createArrayTypeString(type, 0, convertPrimitives,
+					staticTyping);
 
 		} else if (type instanceof TypeVariable) {
-			return type.toString();
+			if (staticTyping) {
+				return "?";
+			} else {
+				return type.toString();
+			}
 		} else {
 			throw new RuntimeException("Cannot convert " + type
 					+ " to String representation!");

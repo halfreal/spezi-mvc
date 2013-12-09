@@ -1,10 +1,10 @@
 package de.halfreal.spezi.mvc;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @SuppressWarnings("rawtypes")
 public abstract class AbstractModel {
@@ -47,7 +47,7 @@ public abstract class AbstractModel {
 	private synchronized List<ChangeListener> findOrCreateKeyListeners(Key key) {
 		List<ChangeListener> keyListeners = listeners.get(key);
 		if (keyListeners == null) {
-			keyListeners = new ArrayList<ChangeListener>();
+			keyListeners = new CopyOnWriteArrayList<ChangeListener>();
 			listeners.put(key, keyListeners);
 		}
 		return keyListeners;

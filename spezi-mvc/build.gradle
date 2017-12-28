@@ -1,0 +1,5 @@
+description = 'Spezi MVC :: Core'
+
+dependencies {
+    testCompile 'junit:junit:4.11'
+}

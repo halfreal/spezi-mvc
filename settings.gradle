@@ -1,0 +1,4 @@
+rootProject.name = 'spezi-mvc-parent'
+
+include ':spezi-mvc'
+include ':spezi-mvc-android'

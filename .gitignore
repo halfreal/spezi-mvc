@@ -1,2 +1,5 @@
-/.settings
-/.project
+/.idea
+/.gradle
+/local.properties
+
+build

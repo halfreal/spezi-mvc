@@ -18,7 +18,7 @@ public class ListenerRegistry<M extends AbstractModel> {
 
 	public void onPause() {
 		unregisterListeners();
-	};
+	}
 
 	public void onResume() {
 		registerListeners();

@@ -436,13 +436,7 @@ public class ModelProcessor extends AbstractProcessor {
 	}
 
 	private boolean hasValidModifiers(VariableElement variableElement) {
-		Set<Modifier> modifiers = variableElement.getModifiers();
-
-		if (modifiers.size() != 0) {
-			return false;
-		}
-
-		return true;
+		return variableElement.getModifiers().size() == 0;
 	}
 
 	@Override

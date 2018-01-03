@@ -450,11 +450,8 @@ public class ModelProcessor extends AbstractProcessor {
 	private boolean isConstant(VariableElement variableElement) {
 		Set<Modifier> modifiers = variableElement.getModifiers();
 
-		if (modifiers.size() != 3) {
-			return false;
-		}
-
-		return modifiers.contains(Modifier.PUBLIC)
+		return modifiers.size() == 3
+				&& modifiers.contains(Modifier.PUBLIC)
 				&& modifiers.contains(Modifier.STATIC)
 				&& modifiers.contains(Modifier.FINAL);
 	}
@@ -472,11 +469,8 @@ public class ModelProcessor extends AbstractProcessor {
 			return false;
 		}
 		DeclaredType declaredType = (DeclaredType) typeMirror;
-		if (declaredType.toString().equals(MODEL_BASE_CLASS)) {
-			return true;
-		} else {
-			return isSubtypeOfAbstractModel(declaredType.asElement());
-		}
+		return declaredType.toString().equals(MODEL_BASE_CLASS)
+				|| isSubtypeOfAbstractModel(declaredType.asElement());
 	}
 
 	@Override

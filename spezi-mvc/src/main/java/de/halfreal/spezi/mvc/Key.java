@@ -10,11 +10,7 @@ public class Key<T> {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj != null && obj instanceof Key) {
-			return name.equals(((Key<?>) obj).name);
-		} else {
-			return false;
-		}
+		return obj != null && obj instanceof Key && name.equals(((Key<?>) obj).name);
 	}
 
 	public String getName() {

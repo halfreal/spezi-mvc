@@ -11,10 +11,10 @@ import de.halfreal.spezi.mvc.ListenerRegistry;
 public abstract class ListenerListActivity<C extends AbstractController<M>, M extends AbstractModel>
 		extends ListActivity {
 
-	protected C controller;
+	protected final C controller;
 	private boolean createdModelListeners;
 	private ListenerRegistry<M> listenerRegistry;
-	protected M model;
+	protected final M model;
 
 	public ListenerListActivity(C controller) {
 		this.controller = controller;

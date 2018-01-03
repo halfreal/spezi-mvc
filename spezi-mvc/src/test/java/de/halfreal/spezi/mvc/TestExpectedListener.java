@@ -4,7 +4,7 @@ import static org.junit.Assert.*;
 
 public class TestExpectedListener<T> extends TestCalledListener<T> {
 
-	private T expectedNewValue;
+	private final T expectedNewValue;
 
 	public TestExpectedListener(T expectedNewValue) {
 		super();

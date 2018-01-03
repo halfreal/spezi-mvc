@@ -29,7 +29,7 @@ public abstract class AbstractModel {
 		}
 	}
 
-	private Map<Key, List<ChangeListener>> listeners;
+	private final Map<Key, List<ChangeListener>> listeners;
 
 	protected AbstractModel() {
 		listeners = new HashMap<Key, List<ChangeListener>>();

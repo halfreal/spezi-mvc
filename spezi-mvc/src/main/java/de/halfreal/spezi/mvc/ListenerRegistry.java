@@ -7,8 +7,8 @@ import java.util.Map.Entry;
 public class ListenerRegistry<M extends AbstractModel> {
 
 	@SuppressWarnings("rawtypes")
-	private Map<Key, ChangeListener> listeners;
-	private M model;
+	private final Map<Key, ChangeListener> listeners;
+	private final M model;
 
 	@SuppressWarnings("rawtypes")
 	public ListenerRegistry(M model) {

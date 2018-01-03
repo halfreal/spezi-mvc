@@ -2,7 +2,7 @@ package de.halfreal.spezi.mvc;
 
 public class Key<T> {
 
-	private String name;
+	private final String name;
 
 	public Key(String name) {
 		this.name = name;

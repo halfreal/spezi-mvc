@@ -19,6 +19,10 @@ subprojects {
         options.encoding = 'UTF-8'
     }
 
+    repositories {
+        jcenter()
+    }
+
     task sourcesJar(type: Jar) {
         classifier = 'sources'
         from sourceSets.main.allJava

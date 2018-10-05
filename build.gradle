@@ -3,7 +3,7 @@ plugins {
 }
 
 allprojects {
-    apply plugin: 'maven'
+    apply plugin: 'maven-publish'
 
     group = 'de.halfreal'
     version = '1.1.0-SNAPSHOT'
@@ -19,14 +19,24 @@ subprojects {
         options.encoding = 'UTF-8'
     }
 
-    task packageSources(type: Jar) {
+    task sourcesJar(type: Jar) {
         classifier = 'sources'
-        from sourceSets.main.allSource
+        from sourceSets.main.allJava
     }
 
-    artifacts.archives packageSources
+    task javadocJar(type: Jar) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
 
-    repositories {
-        jcenter()
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                from components.java
+
+                artifact sourcesJar
+                artifact javadocJar
+            }
+        }
     }
 }
